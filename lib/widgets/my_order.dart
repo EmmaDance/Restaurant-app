@@ -4,6 +4,7 @@ import 'package:restaurant_app/data/bloc.dart';
 import 'dart:developer' as developer;
 
 import 'package:restaurant_app/data/order.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MyOrder extends StatefulWidget {
   final OrderBloc bloc;
@@ -19,19 +20,32 @@ class _MyOrderState extends State<MyOrder> {
   List<String> tables = ['T1', 'T2', 'North', 'Big', 'Small', 'Round'].toList();
   String table;
   Future future;
+  SharedPreferences sharedPreferences;
 
   _MyOrderState(this.bloc);
 
   @override
   void initState() {
+    initTable();
     super.initState();
   }
 
+  void initTable() async {
+    developer.log("initTable");
+      sharedPreferences = await SharedPreferences.getInstance();
+      developer.log(sharedPreferences.getString("table"));
+    setState(()  {
+      table = sharedPreferences.getString("table") ?? "";
+      if (table != "") {
+        future = getMyOrder();
+      }
+    });
+  }
+
   getMyOrder() async {
-    try{
+    try {
       return await bloc.getMyOrder(table);
-    }
-    on Exception catch(e){
+    } on Exception catch (e) {
       Fluttertoast.showToast(
           msg: e.toString(),
           toastLength: Toast.LENGTH_SHORT,
@@ -57,6 +71,7 @@ class _MyOrderState extends State<MyOrder> {
               onChanged: (newValue) {
                 setState(() {
                   table = newValue;
+                  sharedPreferences.setString("table", table);
                   future = getMyOrder();
                 });
               },
